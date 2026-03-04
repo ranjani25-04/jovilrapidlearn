@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Course Modules | JovilRapidLearn</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Poppins',sans-serif;
+}
+
+body{
+  background:#f4f7fb;
+  color:#333;
+}
+
+/* Header */
+header{
+  background:#0a2540;
+  color:#fff;
+  padding:18px 60px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+header h2{
+  font-size:22px;
+}
+
+header a{
+  color:#4fd1c5;
+  text-decoration:none;
+  font-size:14px;
+}
+
+/* Section */
+section{
+  padding:50px 60px;
+}
+
+.title{
+  font-size:28px;
+  margin-bottom:20px;
+  text-align:center;
+}
+
+/* Login Box */
+.login-box{
+  background:#fff;
+  max-width:420px;
+  margin:0 auto 40px;
+  padding:30px;
+  border-radius:12px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.08);
+}
+
+.login-box h3{
+  text-align:center;
+  margin-bottom:15px;
+}
+
+.login-box input{
+  width:100%;
+  padding:10px;
+  margin-bottom:12px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+
+.login-box label{
+  font-size:14px;
+  margin-right:15px;
+}
+
+.login-box button{
+  width:100%;
+  padding:10px;
+  background:#0a2540;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+/* Hide radio */
+input[type="radio"]{
+  display:none;
+}
+
+/* Course Card */
+.course-info{
+  background:#fff;
+  padding:30px;
+  border-radius:12px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.08);
+  max-width:900px;
+  margin:auto;
+  display:none;
+}
+
+/* Modules */
+.module{
+  background:#f4f7fb;
+  padding:15px 20px;
+  border-radius:8px;
+  margin-bottom:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.btn{
+  padding:6px 14px;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+  font-size:13px;
+}
+
+.learn{
+  background:#4fd1c5;
+}
+
+/* Admin Panel */
+.admin{
+  background:#fff;
+  padding:30px;
+  margin-top:40px;
+  border-radius:12px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.08);
+  display:none;
+}
+
+/* SHOW CONTENT BASED ON ROLE */
+#student:checked ~ .course-info{
+  display:block;
+}
+
+#admin:checked ~ .course-info{
+  display:block;
+}
+
+#admin:checked ~ .admin{
+  display:block;
+}
+
+/* Footer */
+footer{
+  background:#0a2540;
+  color:#fff;
+  padding:20px;
+  text-align:center;
+  margin-top:60px;
+  font-size:13px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h2>JovilRapidLearn</h2>
+  <a href="index.html">← Back to Home</a>
+</header>
+
+<section>
+
+<!-- Role Selection -->
+<div class="login-box">
+  <h3>Login to Continue</h3>
+
+  <input type="email" placeholder="Email" required>
+  <input type="password" placeholder="Password" required>
+
+  <label>
+    <input type="radio" name="role" id="student">
+    Student
+  </label>
+
+  <label>
+    <input type="radio" name="role" id="admin">
+    Admin
+  </label>
+
+  <button>Login</button>
+</div>
+
+<!-- Course Content -->
+<div class="course-info">
+  <h3>Web Development Course</h3>
+  <p style="margin-bottom:20px;font-size:14px;">
+    Learn full-stack web development with structured modules and hands-on practice.
+  </p>
+
+  <div class="module">
+    <span>Module 1: HTML Basics</span>
+    <button class="btn learn">Learn</button>
+  </div>
+
+  <div class="module">
+    <span>Module 2: CSS Styling</span>
+    <button class="btn learn">Learn</button>
+  </div>
+
+  <div class="module">
+    <span>Module 3: JavaScript</span>
+    <button class="btn learn">Learn</button>
+  </div>
+</div>
+
+<!-- ADMIN CRUD PANEL -->
+<div class="admin">
+  <h3>Admin Panel (CRUD)</h3>
+
+  <input type="text" placeholder="Module Title">
+  <input type="text" placeholder="Module Description">
+
+  <button style="margin-bottom:15px;">Add / Update Module</button>
+
+  <div class="module">
+    <span>Module 1: HTML Basics</span>
+    <div>
+      <button class="btn">Edit</button>
+      <button class="btn" style="background:#e53e3e;color:#fff;">Delete</button>
+    </div>
+  </div>
+</div>
+
+</section>
+
+<footer>
+© 2026 JovilRapidLearn | Learn Faster. Grow Smarter.
+</footer>
+
+</body>
+</html>
