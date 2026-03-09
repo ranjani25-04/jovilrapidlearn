@@ -1,168 +1,180 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Login | Register - JovilRapidLearn</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login | Register - JovilRapidLearn</title>
 
-  <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
+<style>
 
-    body {
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(135deg, #0a2540, #1e3c72);
-    }
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
 
-    .container {
-      width: 380px;
-      background: #fff;
-      border-radius: 12px;
-      padding: 30px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
-    }
+body{
+background:linear-gradient(135deg,#0a2540,#1e3c72);
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+}
 
-    .title {
-      text-align: center;
-      margin-bottom: 25px;
-      font-size: 24px;
-      font-weight: 600;
-      color: #0a2540;
-    }
+.container{
+background:white;
+width:400px;
+padding:40px;
+border-radius:12px;
+box-shadow:0 10px 30px rgba(0,0,0,0.2);
+}
 
-    .tabs {
-      display: flex;
-      margin-bottom: 25px;
-    }
+.container h2{
+text-align:center;
+margin-bottom:20px;
+color:#0a2540;
+}
 
-    .tabs label {
-      flex: 1;
-      text-align: center;
-      padding: 10px;
-      cursor: pointer;
-      font-weight: 500;
-      color: #555;
-      border-bottom: 2px solid #ddd;
-      transition: 0.3s;
-    }
+.input-group{
+margin-bottom:15px;
+}
 
-    input[type="radio"] {
-      display: none;
-    }
+.input-group label{
+font-size:14px;
+display:block;
+margin-bottom:5px;
+}
 
-    #login:checked ~ .tabs label[for="login"],
-    #register:checked ~ .tabs label[for="register"] {
-      color: #0a2540;
-      border-bottom: 3px solid #4fd1c5;
-    }
+.input-group input{
+width:100%;
+padding:10px;
+border-radius:6px;
+border:1px solid #ccc;
+outline:none;
+}
 
-    .form {
-      display: none;
-      animation: fade 0.5s ease;
-    }
+button{
+width:100%;
+padding:10px;
+border:none;
+border-radius:6px;
+background:#0a2540;
+color:white;
+font-size:15px;
+cursor:pointer;
+margin-top:10px;
+}
 
-    #login:checked ~ .login-form,
-    #register:checked ~ .register-form {
-      display: block;
-    }
+button:hover{
+background:#1e3c72;
+}
 
-    .form input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
+.switch{
+text-align:center;
+margin-top:15px;
+font-size:14px;
+}
 
-    .form input:focus {
-      outline: none;
-      border-color: #4fd1c5;
-    }
+.switch span{
+color:#0a2540;
+font-weight:500;
+cursor:pointer;
+}
 
-    .form button {
-      width: 100%;
-      padding: 12px;
-      background: #0a2540;
-      border: none;
-      color: #fff;
-      font-size: 15px;
-      font-weight: 500;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
+#registerForm{
+display:none;
+}
 
-    .form button:hover {
-      background: #1e3c72;
-    }
+.logo{
+text-align:center;
+font-size:22px;
+font-weight:600;
+color:#0a2540;
+margin-bottom:20px;
+}
 
-    .form p {
-      text-align: center;
-      margin-top: 15px;
-      font-size: 13px;
-      color: #666;
-    }
-
-    .form p span {
-      color: #4fd1c5;
-      font-weight: 500;
-      cursor: pointer;
-    }
-
-    @keyframes fade {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-  </style>
+</style>
 </head>
+
 <body>
 
-  <div class="container">
+<div class="container">
 
-    <div class="title">JovilRapidLearn</div>
+<div class="logo"><h2>JovilRapidLearn</h2></div>
+<hr>
+<br>
+<!-- LOGIN FORM -->
+<form id="loginForm" action="/logincheck" method="POST">
+<h2>Login</h2>
 
-    <!-- Login Form -->
-    <div class="form login-form">
-      <form method="POST">
-  <input type="hidden" name="action" value="login">
-  <input type="email" name="email" required>
-  <input type="password" name="password" required>
-  <input type="radio" name="role" value="student" required> Student
-  <input type="radio" name="role" value="admin"> Admin
-  <button>Login</button>
-</form>
-      <p>Don't have an account? <span onclick="document.getElementById('register').checked=true">Register</span></p>
-      
-    </div>
+<div class="input-group">
+<label>Email</label>
+<input type="email" name="email" placeholder="Enter email" required>
+</div>
 
-    <!-- Register Form -->
-    <div class="form register-form">
-    
-    <form method="POST">
-  <input type="hidden" name="action" value="register">
-  <input type="text" name="name" required>
-  <input type="email" name="email" required>
-  <input type="password" name="password" required>
-  <input type="radio" name="role" value="student" required> Student
-  <input type="radio" name="role" value="admin"> Admin
-    <button>Create Account</button>
+<div class="input-group">
+<label>Password</label>
+<input type="password" name="password" placeholder="Enter password" required>
+</div>
+
+<button type="submit">Login</button>
+
+<div class="switch">
+Don't have an account? 
+<span onclick="showRegister()">Register</span>
+</div>
+
 </form>
 
-      <p>Already have an account? <span onclick="document.getElementById('login').checked=true">Login</span></p>
-    </div>
 
-  </div>
+<!-- REGISTER FORM -->
+<form id="registerForm" action="/register" method="POST">
+
+<h2>Register</h2>
+
+<div class="input-group">
+<label>Full Name</label>
+<input type="text" name="name" placeholder="Enter name" required>
+</div>
+
+<div class="input-group">
+<label>Email</label>
+<input type="email" name="email" placeholder="Enter email" required>
+</div>
+
+<div class="input-group">
+<label>Password</label>
+<input type="password" name="password" placeholder="Create password" required>
+</div>
+
+<button type="submit">Create Account</button>
+
+<div class="switch">
+Already have an account? 
+<span onclick="showLogin()">Login</span>
+</div>
+
+</form>
+
+</div>
+
+
+<script>
+
+function showRegister(){
+document.getElementById("loginForm").style.display="none";
+document.getElementById("registerForm").style.display="block";
+}
+
+function showLogin(){
+document.getElementById("registerForm").style.display="none";
+document.getElementById("loginForm").style.display="block";
+}
+
+</script>
 
 </body>
 </html>
