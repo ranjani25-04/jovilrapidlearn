@@ -1,245 +1,289 @@
 from flask import Flask, render_template, request, redirect, session, send_file
-from flask_mysqldb import MySQL
-from werkzeug.security import generate_password_hash, check_password_hash
-from reportlab.pdfgen import canvas
-from datetime import date
-import os
+import sqlite3
 
 app = Flask(__name__)
-app.secret_key = "jovil_secret_key"
+app.secret_key = "lmskey"
 
-# ---------------- MYSQL CONFIG ----------------
-app.config["MYSQL_HOST"] = "localhost"
-app.config["MYSQL_USER"] = "root"
-app.config["MYSQL_PASSWORD"] = ""   # put password if exists
-app.config["MYSQL_DB"] = "jovilrapidlearn"
-app.config["MYSQL_CURSORCLASS"] = "DictCursor"
+# DATABASE
+conn = sqlite3.connect("lms.db", check_same_thread=False)
+cursor = conn.cursor()
 
-mysql = MySQL(app)
+# USERS TABLE
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS users(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+name TEXT,
+email TEXT,
+password TEXT
+)
+""")
 
-# ---------------- DATABASE SETUP ----------------
-def setup_database():
-    cur = mysql.connection.cursor()
+# COURSES TABLE
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS courses(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+course TEXT,
+description TEXT
+)
+""")
 
-    cur.execute("CREATE DATABASE IF NOT EXISTS jovilrapidlearn")
-    cur.execute("USE jovilrapidlearn")
+# LESSONS TABLE
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS lessons(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+course_id INTEGER,
+title TEXT,
+content TEXT
+)
+""")
 
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS users(
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100),
-        email VARCHAR(100) UNIQUE,
-        password VARCHAR(255),
-        role VARCHAR(20)
-    )
-    """)
+# QUIZ TABLE
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS quiz(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+lesson_id INTEGER,
+question TEXT,
+option1 TEXT,
+option2 TEXT,
+option3 TEXT,
+option4 TEXT,
+answer TEXT
+)
+""")
 
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS modules(
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(200),
-        description VARCHAR(300)
-    )
-    """)
+conn.commit()
 
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS progress(
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT,
-        module_id INT,
-        completed INT
-    )
-    """)
 
-    # ---------- DEFAULT ADMIN ----------
-    cur.execute("SELECT * FROM users WHERE email=%s", ("admin@jovil.com",))
-    if not cur.fetchone():
-        cur.execute(
-            "INSERT INTO users (name,email,password,role) VALUES (%s,%s,%s,%s)",
-            ("Admin", "admin@jovil.com",
-             generate_password_hash("admin123"), "admin")
-        )
-
-    # ---------- DEFAULT STUDENT ----------
-    cur.execute("SELECT * FROM users WHERE email=%s", ("student@jovil.com",))
-    if not cur.fetchone():
-        cur.execute(
-            "INSERT INTO users (name,email,password,role) VALUES (%s,%s,%s,%s)",
-            ("Student", "student@jovil.com",
-             generate_password_hash("student123"), "student")
-        )
-
-    mysql.connection.commit()
-    cur.close()
-
-# ---------------- HOME ----------------
+# HOME
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return render_template("home.html")
 
-# ---------------- LOGIN & REGISTER ----------------
-@app.route("/login", methods=["GET", "POST"])
+
+# LOGIN PAGE
+@app.route("/login")
 def login():
-    if request.method == "POST":
-        action = request.form["action"]
-        email = request.form["email"]
-        password = request.form["password"]
-        role = request.form["role"]
-
-        cur = mysql.connection.cursor()
-
-        if action == "register":
-            name = request.form["name"]
-            cur.execute(
-                "INSERT INTO users (name,email,password,role) VALUES (%s,%s,%s,%s)",
-                (name, email, generate_password_hash(password), role)
-            )
-            mysql.connection.commit()
-
-        if action == "login":
-            cur.execute(
-                "SELECT * FROM users WHERE email=%s AND role=%s",
-                (email, role)
-            )
-            user = cur.fetchone()
-            if user and check_password_hash(user["password"], password):
-                session["user_id"] = user["id"]
-                session["role"] = user["role"]
-                return redirect("/courses")
-
-        cur.close()
     return render_template("login.html")
 
-# ---------------- COURSES ----------------
+
+# REGISTER
+@app.route("/register", methods=["POST"])
+def register():
+
+    name = request.form['name']
+    email = request.form['email']
+    password = request.form['password']
+
+    cursor.execute(
+        "INSERT INTO users(name,email,password) VALUES(?,?,?)",
+        (name,email,password)
+    )
+
+    conn.commit()
+
+    return redirect("/login")
+
+
+# LOGIN CHECK
+@app.route("/logincheck", methods=["POST"])
+def logincheck():
+
+    email = request.form['email']
+    password = request.form['password']
+
+    # ADMIN LOGIN
+    if email == "admin@gmail.com" and password == "admin123":
+        return redirect("/admin")
+
+    cursor.execute(
+        "SELECT * FROM users WHERE email=? AND password=?",
+        (email,password)
+    )
+
+    user = cursor.fetchone()
+
+    if user:
+        session["user"] = user[1]
+        return redirect("/courses")
+    else:
+        return "Invalid Login"
+
+
+# STUDENT COURSES
 @app.route("/courses")
 def courses():
-    if "user_id" not in session:
+
+    if "user" not in session:
         return redirect("/login")
 
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM modules")
-    modules = cur.fetchall()
-    cur.close()
+    view = request.args.get("view")
+
+    cursor.execute("SELECT * FROM courses")
+    courses = cursor.fetchall()
+
+    return render_template("courses.html", courses=courses, view=view)
+
+
+# LESSON PAGE
+@app.route("/lesson/<course_id>")
+def lesson(course_id):
+
+    cursor.execute("SELECT * FROM lessons WHERE course_id=?", (course_id,))
+    lessons = cursor.fetchall()
+
+    return render_template("lesson.html", lessons=lessons)
+
+
+# QUIZ PAGE
+@app.route("/quiz/<lesson_id>")
+def quiz(lesson_id):
+
+    cursor.execute("SELECT * FROM quiz WHERE lesson_id=?", (lesson_id,))
+    quiz = cursor.fetchone()
+
+    return render_template("quiz.html", quiz=quiz)
+
+
+# ADMIN PANEL
+@app.route("/admin")
+def admin():
+
+    view = request.args.get("view")
+
+    cursor.execute("SELECT * FROM courses")
+    courses = cursor.fetchall()
+
+    cursor.execute("SELECT * FROM users")
+    users = cursor.fetchall()
+
+    cursor.execute("SELECT * FROM lessons")
+    lessons = cursor.fetchall()
 
     return render_template(
-        "courses.html",
-        modules=modules,
-        role=session["role"]
+        "admin.html",
+        courses=courses,
+        users=users,
+        lessons=lessons,
+        view=view
     )
 
-# ---------------- ADMIN CRUD ----------------
-@app.route("/add_module", methods=["POST"])
-def add_module():
-    if session["role"] != "admin":
-        return "Unauthorized"
 
-    title = request.form["title"]
-    description = request.form["description"]
+# ADD COURSE
+@app.route("/addcourse", methods=["POST"])
+def addcourse():
 
-    cur = mysql.connection.cursor()
-    cur.execute(
-        "INSERT INTO modules (title,description) VALUES (%s,%s)",
-        (title, description)
+    name = request.form['course']
+    desc = request.form['description']
+
+    cursor.execute(
+        "INSERT INTO courses(course,description) VALUES(?,?)",
+        (name,desc)
     )
-    mysql.connection.commit()
-    cur.close()
-    return redirect("/courses")
 
-@app.route("/update_module/<int:id>", methods=["POST"])
-def update_module(id):
-    if session["role"] != "admin":
-        return "Unauthorized"
+    conn.commit()
 
-    title = request.form["title"]
-    description = request.form["description"]
+    return redirect("/admin")
 
-    cur = mysql.connection.cursor()
-    cur.execute(
-        "UPDATE modules SET title=%s, description=%s WHERE id=%s",
-        (title, description, id)
+
+# DELETE COURSE
+@app.route("/delete/<id>")
+def delete(id):
+
+    cursor.execute("DELETE FROM courses WHERE id=?", (id,))
+    conn.commit()
+
+    return redirect("/admin")
+
+
+# UPDATE COURSE
+@app.route("/update/<id>", methods=["POST"])
+def update(id):
+
+    name = request.form['course']
+    desc = request.form['description']
+
+    cursor.execute(
+        "UPDATE courses SET course=?, description=? WHERE id=?",
+        (name,desc,id)
     )
-    mysql.connection.commit()
-    cur.close()
-    return redirect("/courses")
 
-@app.route("/delete_module/<int:id>")
-def delete_module(id):
-    if session["role"] != "admin":
-        return "Unauthorized"
+    conn.commit()
 
-    cur = mysql.connection.cursor()
-    cur.execute("DELETE FROM modules WHERE id=%s", (id,))
-    mysql.connection.commit()
-    cur.close()
-    return redirect("/courses")
+    return redirect("/admin")
 
-# ---------------- STUDENT PROGRESS ----------------
-@app.route("/complete_module/<int:module_id>")
-def complete_module(module_id):
-    cur = mysql.connection.cursor()
-    cur.execute("""
-        SELECT * FROM progress
-        WHERE user_id=%s AND module_id=%s
-    """, (session["user_id"], module_id))
 
-    if not cur.fetchone():
-        cur.execute(
-            "INSERT INTO progress (user_id,module_id,completed) VALUES (%s,%s,1)",
-            (session["user_id"], module_id)
-        )
-        mysql.connection.commit()
+# ADD LESSON
+@app.route("/addlesson", methods=["POST"])
+def addlesson():
 
-    cur.close()
-    return redirect("/check_completion")
+    course_id = request.form['course_id']
+    title = request.form['title']
+    content = request.form['content']
 
-@app.route("/check_completion")
-def check_completion():
-    cur = mysql.connection.cursor()
-
-    cur.execute("SELECT COUNT(*) AS total FROM modules")
-    total = cur.fetchone()["total"]
-
-    cur.execute(
-        "SELECT COUNT(*) AS done FROM progress WHERE user_id=%s",
-        (session["user_id"],)
+    cursor.execute(
+        "INSERT INTO lessons(course_id,title,content) VALUES(?,?,?)",
+        (course_id,title,content)
     )
-    done = cur.fetchone()["done"]
 
-    cur.close()
-    return redirect("/certificate" if total > 0 and done == total else "/courses")
+    conn.commit()
 
-# ---------------- CERTIFICATE (PDF) ----------------
+    return redirect("/admin?view=lessons")
+
+
+# DELETE LESSON
+@app.route("/deletelesson/<id>")
+def deletelesson(id):
+
+    cursor.execute("DELETE FROM lessons WHERE id=?", (id,))
+    conn.commit()
+
+    return redirect("/admin?view=lessons")
+
+
+# ADD QUIZ
+@app.route("/addquiz", methods=["POST"])
+def addquiz():
+
+    lesson_id = request.form['lesson_id']
+    question = request.form['question']
+    o1 = request.form['option1']
+    o2 = request.form['option2']
+    o3 = request.form['option3']
+    o4 = request.form['option4']
+    ans = request.form['answer']
+
+    cursor.execute("""
+    INSERT INTO quiz(lesson_id,question,option1,option2,option3,option4,answer)
+    VALUES(?,?,?,?,?,?,?)
+    """,(lesson_id,question,o1,o2,o3,o4,ans))
+
+    conn.commit()
+
+    return redirect("/admin")
+
+
+# CERTIFICATE DOWNLOAD
 @app.route("/certificate")
 def certificate():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT name FROM users WHERE id=%s", (session["user_id"],))
-    name = cur.fetchone()["name"]
-    cur.close()
 
-    today = date.today().strftime("%d %B %Y")
-    file_name = "certificate.pdf"
+    name = session["user"]
 
-    c = canvas.Canvas(file_name)
-    c.setFont("Helvetica-Bold", 22)
-    c.drawCentredString(300, 750, "Certificate of Completion")
-    c.setFont("Helvetica", 16)
-    c.drawCentredString(300, 700, name)
-    c.drawCentredString(300, 660, "has successfully completed")
-    c.drawCentredString(300, 620, "Web Development Course")
-    c.drawCentredString(300, 580, f"Date: {today}")
-    c.drawCentredString(300, 540, "JovilRapidLearn")
-    c.save()
+    file = open("certificate.txt","w")
+    file.write("JovilRapidLearn Certificate\n\n")
+    file.write("This certificate is awarded to\n")
+    file.write(name + "\n\n")
+    file.write("For completing the course.")
+    file.close()
 
-    return send_file(file_name, as_attachment=True)
+    return send_file("certificate.txt", as_attachment=True)
 
-# ---------------- LOGOUT ----------------
+
+# LOGOUT
 @app.route("/logout")
 def logout():
-    session.clear()
+
+    session.pop("user", None)
     return redirect("/")
 
-# ---------------- RUN ----------------
-if __name__ == "__main__":
-    with app.app_context():
-        setup_database()
-    app.run(debug=True)
+
+app.run(debug=True)
